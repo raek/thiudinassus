@@ -89,7 +89,8 @@
 
 (defn signature-matches?
   "Check whether a signature matches another. Two signatures match if
-   all their edge types match element-wise.
+   all their edge types match element-wise, not concidering rotated
+   variants.
 
    Examples:
 
@@ -103,7 +104,7 @@
   (every? identity (map edge-type-matches? x y)))
 
 (defn rotate-signature
-  "Rotate the signature `rot`number of 90° steps clockwise.
+  "Rotate the signature `rot` number of 90° steps clockwise.
 
    Examples:
 
@@ -120,8 +121,10 @@
 
    Examples:
 
-       (rotated-signature-matches? 1 [:road :field :road :city]
-                                   [nil :road :field nil nil])
+       (rotated-signature-matches?
+        1
+        [:road :field :road :city]
+        [nil :road :field nil nil])
          => true"
   [rot free-sig fixed-sig]
   (signature-matches? (rotate-signature rot free-sig)
