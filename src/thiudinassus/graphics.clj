@@ -1,4 +1,6 @@
 (ns thiudinassus.graphics
+  (:use [thiudinassus.util
+         :only (map-vals update-map)])
   (:import (java.awt Color BasicStroke Dimension Graphics2D)
            (java.awt.geom Path2D$Double)
            (javax.swing JPanel)))
@@ -93,11 +95,12 @@
 
 (defn path-to-path2d [path]
   (doto (Path2D$Double.)
-    (add-region! path)))
+    (add-path! path)))
 
 (defn- use-style! [^Graphics2D g style variant]
   (let [{:keys [stroke paint]} (get-in styles [style variant])]
-    (.setStroke g stroke)
+    (when stroke
+      (.setStroke g stroke))
     (.setPaint g paint)))
 
 (defn- draw-city! [^Graphics2D g path2d]
@@ -117,6 +120,34 @@
 (defn- draw-field! [^Graphics2D g path2d]
   (use-style! g :field :fill)
   (.fill g path2d))
+
+(defn draw-tile! [g tile]
+  (let [{:keys [cities roads fields]} tile]
+    (doseq [[id field] fields]
+      (draw-field! g (:path2d field)))
+    (doseq [[id city] cities]
+      (draw-city! g (:path2d city)))
+    (doseq [[id road] roads]
+      (draw-road! g (:path2d road)))))
+
+(declare adorn-city-with-graphics)
+(declare adorn-road-with-graphics)
+(declare adorn-field-with-graphics)
+
+(defn adorn-tile-with-graphics [tile]
+  (update-map tile
+              :cities #(map-vals % adorn-city-with-graphics)
+              :roads  #(map-vals % adorn-road-with-graphics)
+              :fields #(map-vals % adorn-field-with-graphics)))
+
+(defn- adorn-city-with-graphics [city]
+  (assoc city :path2d (region-to-path2d (:region city))))
+
+(defn- adorn-road-with-graphics [road]
+  (assoc road :path2d (path-to-path2d (:path road))))
+
+(defn- adorn-field-with-graphics [field]
+  (assoc field :path2d (region-to-path2d (:region field))))
 
 (defn create-panel [render-fn width height]
   (doto (proxy [JPanel] []
