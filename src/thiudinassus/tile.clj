@@ -52,7 +52,7 @@
 ;;
 ;; "Intermediate directions" means something slightly different here,
 ;; compared to the normal usage. The used intermediary (sub)directions
-;; are: _NNE, EEN, EES, SSE, SSW, WWS, WWN and NNE_. They are
+;; are: _NNE, ENE, ESE, SSE, SSW, WSW, WNW and NNW_. They are
 ;; represented as follows: `[:n :e]`, `[:e :n]`, `[:e :s]`, `[:s :e]`,
 ;; `[:s :w]`, `[:w :s]`, `[:w :n]`, `[:n, :e]`. They could be read as
 ;; "the eastern part of the north side", "the northern part of the
