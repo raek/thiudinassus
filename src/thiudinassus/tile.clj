@@ -144,43 +144,7 @@
   (filter #(rotated-signature-matches? % free-sig fixed-sig)
           (range 4)))
 
-(defn matches-signature?
-  "Check whether the edge to piece of tile mapping matches the given
-   signature."
-  [edges signature]
-  (let [edge-types (->> [:n :e :s :w]
-                        (map edges)
-                        (map first))]
-    (every? identity (map edge-type-matches? edge-types signature))))
-
-(defn rotate-edges
-  "Rotate an edge to piece of tile mapping `rot`number of 90° steps
-   clockwise.
-
-   Examples:
-
-       (rotate-edges {:n []} FIXME"
-  [edges rot]
-  (map-keys edges (partial rotate-cdir rot)))
-
-(defn rotate-city [city rot]
-  (update-map city
-              :edges #(map-coll % (partial rotate-cdir rot))))
-
-(defn rotate-road [road rot]
-  (update-map road
-              :edges #(map-coll % (partial rotate-cdir rot))))
-
-(defn rotate-field [field rot]
-  (update-map field
-              :edges #(map-coll % (partial rotate-idir rot))))
-
-(defn rotate-tile [tile rot]
-  (update-map tile
-              :edges  (partial rotate-edges rot)
-              :cities #(map-vals (partial rotate-city rot))
-              :roads  #(map-vals (partial rotate-road rot))
-              :fields #(map-vals (partial rotate-field rot))))
+;; ## Tile Operations
 
 (defn tile-signature
   "Returns the signature of the tile."
@@ -189,4 +153,30 @@
        (map (:edges tile))
        (map first)
        vec))
+
+(declare rotate-edges rotate-city rotate-road rotate-field)
+
+(defn rotate-tile
+  "Rotate the tile `rot` number of 90° steps clockwise."
+  [rot tile]
+  (update-map tile
+              :edges  (partial rotate-edges rot)
+              :cities #(map-vals % (partial rotate-city rot))
+              :roads  #(map-vals % (partial rotate-road rot))
+              :fields #(map-vals % (partial rotate-field rot))))
+
+(defn- rotate-edges [rot edges]
+  (map-keys edges (partial rotate-cdir rot)))
+
+(defn- rotate-city [rot city]
+  (update-map city
+              :edges #(map-coll % (partial rotate-cdir rot))))
+
+(defn- rotate-road [rot road]
+  (update-map road
+              :edges #(map-coll % (partial rotate-cdir rot))))
+
+(defn- rotate-field [rot field]
+  (update-map field
+              :edges #(map-coll % (partial rotate-idir rot))))
 

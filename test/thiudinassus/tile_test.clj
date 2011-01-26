@@ -2,6 +2,8 @@
   (:use clojure.test
         thiudinassus.tile))
 
+;; Directions
+
 (deftest test-rotate-cdir
   (are [steps res-dir]
        (= (rotate-cdir steps :n) res-dir)
@@ -19,6 +21,8 @@
        (= (rotate-idir steps [:n :e]) res-dir)
        0 [:n :e],   1 [:e :s],   2 [:s :w],   3 [:w :n],   4 [:n :e]
                    -1 [:w :n],  -2 [:s :w],  -3 [:e :s],  -4 [:n :e]))
+
+;; Edge Types
 
 (deftest test-edge-type-matches?
   (testing "two of the edge type match"
@@ -39,6 +43,8 @@
          :city :road,    :city :field
          :road :city,    :road :field
          :field :city,   :field :road)))
+
+;; Signatures
 
 (deftest test-signature-matches?
   (testing "a signature matches itself"
@@ -69,4 +75,35 @@
         2 [:road :city :road :field]
         3 [:field :road :city :road]
         4 [:road :field :road :city]))
+
+(deftest test-matching-rotations
+  (is (= (matching-rotations [:field :road :road :city]
+                             [nil nil :road :road])
+         [1]))
+  (is (= (matching-rotations [:road :field :road :city]
+                             [nil :road nil nil])
+         [1 3])))
+
+;; Tiles
+
+(def tile-logic
+  {:edges  {:n [:road :f0 :r0 :f1]
+            :e [:road :f1 :r0 :f0]
+            :s [:city :c0]
+            :w [:city :c0]}
+   :cities {:c0 {:edges #{:s :w}}}
+   :roads  {:r0 {:edges #{:n :e}}}
+   :fields {:f0 {:edges #{[:n :w] [:e :s]}}
+            :f1 {:edges #{[:n :e] [:e :n]}}}})
+
+(deftest test-rotate-tile
+  (is (= (rotate-tile 1 tile-logic)
+         {:edges  {:n [:city :c0]
+                   :e [:road :f0 :r0 :f1]
+                   :s [:road :f1 :r0 :f0]
+                   :w [:city :c0]}
+          :cities {:c0 {:edges #{:w :n}}}
+          :roads  {:r0 {:edges #{:e :s}}}
+          :fields {:f0 {:edges #{[:e :n] [:s :w]}}
+                   :f1 {:edges #{[:e :s] [:s :e]}}}})))
 
