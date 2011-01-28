@@ -180,5 +180,12 @@
   (update-map field
               :edges #(map-coll % (partial rotate-idir rot))))
 
-(def adorn-tile identity)
+(declare adorned?)
+
+(defn adorn-tile [tile]
+  {:pre [(not (adorned? tile))]}
+  (vary-meta tile assoc :adorned? true))
+
+(defn- adorned? [tile]
+  (-> tile meta :adorned?))
 

@@ -122,7 +122,10 @@
   (use-style! g :field :fill)
   (.fill g path2d))
 
+(declare adorned? adorn-tile adorn-city adorn-road adorn-field)
+
 (defn draw-tile! [g tile]
+  {:pre [(adorned? tile)]}
   (let [{:keys [cities roads fields]} tile]
     (doseq [[id field] fields]
       (draw-field! g (::path2d field)))
@@ -131,11 +134,14 @@
     (doseq [[id road] roads]
       (draw-road! g (::path2d road)))))
 
-(declare adorn-tile adorn-city adorn-road adorn-field)
-
 (add-hook #'tile/adorn-tile
   (fn [f tile]
-    (f (adorn-tile tile))))
+    (-> (adorn-tile tile)
+        (vary-meta assoc ::adorned? true)
+        (f))))
+
+(defn- adorned? [tile]
+  (-> tile meta ::adorned?))
 
 (defn- adorn-tile [tile]
   (update-map tile
