@@ -3,7 +3,7 @@
          :only (map-vals update-map)])
   (:import (java.awt Color BasicStroke Dimension Graphics2D)
            (java.awt.geom Path2D$Double)
-           (javax.swing JPanel)))
+           (javax.swing JPanel JFrame)))
 
 ;; # The Tango color palette
 
@@ -155,3 +155,10 @@
             (proxy-super paintComponent g)
             (render-fn g)))
     (.setPreferredSize (Dimension. width height))))
+
+(defn show-tile [tile]
+  (doto (JFrame. "Tile")
+    (.add (create-panel #(draw-tile! % tile) 180 180))
+    (.pack)
+    (.show)))
+
