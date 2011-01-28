@@ -1,6 +1,7 @@
 (ns thiudinassus.graphics
-  (:use [thiudinassus.util
-         :only (map-vals update-map)])
+  (:require [thiudinassus.tile :as tile])
+  (:use [thiudinassus.util :only (map-vals update-map)]
+        [robert.hooke :only (add-hook)])
   (:import (java.awt Color BasicStroke Dimension Graphics2D)
            (java.awt.geom Path2D$Double)
            (javax.swing JPanel JFrame)))
@@ -124,30 +125,32 @@
 (defn draw-tile! [g tile]
   (let [{:keys [cities roads fields]} tile]
     (doseq [[id field] fields]
-      (draw-field! g (:path2d field)))
+      (draw-field! g (::path2d field)))
     (doseq [[id city] cities]
-      (draw-city! g (:path2d city)))
+      (draw-city! g (::path2d city)))
     (doseq [[id road] roads]
-      (draw-road! g (:path2d road)))))
+      (draw-road! g (::path2d road)))))
 
-(declare adorn-city-with-graphics)
-(declare adorn-road-with-graphics)
-(declare adorn-field-with-graphics)
+(declare adorn-tile adorn-city adorn-road adorn-field)
 
-(defn adorn-tile-with-graphics [tile]
+(add-hook #'tile/adorn-tile
+  (fn [f tile]
+    (f (adorn-tile tile))))
+
+(defn- adorn-tile [tile]
   (update-map tile
-              :cities #(map-vals % adorn-city-with-graphics)
-              :roads  #(map-vals % adorn-road-with-graphics)
-              :fields #(map-vals % adorn-field-with-graphics)))
+              :cities #(map-vals % adorn-city)
+              :roads  #(map-vals % adorn-road)
+              :fields #(map-vals % adorn-field)))
 
-(defn- adorn-city-with-graphics [city]
-  (assoc city :path2d (region-to-path2d (:region city))))
+(defn- adorn-city [city]
+  (assoc city ::path2d (region-to-path2d (:region city))))
 
-(defn- adorn-road-with-graphics [road]
-  (assoc road :path2d (path-to-path2d (:path road))))
+(defn- adorn-road [road]
+  (assoc road ::path2d (path-to-path2d (:path road))))
 
-(defn- adorn-field-with-graphics [field]
-  (assoc field :path2d (region-to-path2d (:region field))))
+(defn- adorn-field [field]
+  (assoc field ::path2d (region-to-path2d (:region field))))
 
 (defn create-panel [render-fn width height]
   (doto (proxy [JPanel] []

@@ -180,3 +180,5 @@
   (update-map field
               :edges #(map-coll % (partial rotate-idir rot))))
 
+(def adorn-tile identity)
+
