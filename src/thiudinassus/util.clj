@@ -66,3 +66,15 @@
   (let [f (fn [acc [k f]]
             (assoc acc k (f (get acc k))))]
     (reduce f m fn-map)))
+
+(defn alternate
+  "Take two collections and return a lazy seq of alternating items
+  from the first coll, then from the second etc until one of the
+  collections is runs out of elements. Unlike interleave, the first
+  collection may contain one element more than the second, which will
+  be included in the resulting laz seq."
+  [c1 c2]
+  (lazy-seq
+    (when-first [x c1]
+      (cons x (alternate c2 (rest c1))))))
+

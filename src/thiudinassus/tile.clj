@@ -1,10 +1,10 @@
 (ns thiudinassus.tile
   "**Tile** contains all functionality for accessing and manipulating
   tiles."
-  (:use [thiudinassus.util
-         :only (assoc-once map-coll map-keys map-vals update-map)]))
+  (:use [thiudinassus.util :only [map-coll map-keys map-vals
+                                  update-map alternate]]))
 
-;; ## Tiles
+;; ## Introduction
 ;;
 ;; A _tile_ has four _edges_ and contains a number of _cities_,
 ;; _roads_, _fields_ and _monasteries_. The cities, roads, fields and
@@ -144,7 +144,44 @@
   (filter #(rotated-signature-matches? % free-sig fixed-sig)
           (range 4)))
 
-;; ## Tile Operations
+;; ## Geometry
+
+(defn rotate-point
+  "Rotate the point `rot` number of 90° steps clockwise."
+  [rot [x y]]
+  (case (mod rot 4)
+    0 [x y]
+    1 [(- 1 y) x]
+    2 [(- 1 x) (- 1 y)]
+    3 [y (- 1 x)]))
+
+(defmulti rotate-segment
+  "Rotate the segment `rot` number of 90° steps clockwise."
+  {:arglists '([rot segment])}
+  (fn [rot segment]
+    (first segment)))
+
+(defmethod rotate-segment :line
+  [_ line]
+  line)
+
+(defmethod rotate-segment :quad
+  [rot [_ c]]
+  [:quad (rotate-point rot c)])
+
+(defmethod rotate-segment :cube
+  [rot [_ c1 c2]]
+  [:cube (rotate-point rot c1) (rotate-point rot c2)])
+
+(defn rotate-points-and-segments
+  "Rotate a region or path `rot` number of 90° steps clockwise."
+  [rot region-or-path]
+  (let [points (take-nth 2 region-or-path)
+        segments (take-nth 2 (rest region-or-path))]
+    (vec (alternate (map (partial rotate-point rot) points)
+                    (map (partial rotate-segment rot) segments)))))
+
+;; ## Tiles
 
 (defn tile-signature
   "Returns the signature of the tile."
@@ -170,15 +207,19 @@
 
 (defn- rotate-city [rot city]
   (update-map city
-              :edges #(map-coll % (partial rotate-cdir rot))))
+              :edges  #(map-coll % (partial rotate-cdir rot))
+              :marker (partial rotate-point rot)
+              :region (partial rotate-points-and-segments rot)))
 
 (defn- rotate-road [rot road]
   (update-map road
-              :edges #(map-coll % (partial rotate-cdir rot))))
+              :edges #(map-coll % (partial rotate-cdir rot))
+              :path  (partial rotate-points-and-segments rot)))
 
 (defn- rotate-field [rot field]
   (update-map field
-              :edges #(map-coll % (partial rotate-idir rot))))
+              :edges  #(map-coll % (partial rotate-idir rot))
+              :region (partial rotate-points-and-segments rot)))
 
 (declare adorned?)
 
